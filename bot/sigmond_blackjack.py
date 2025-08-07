@@ -50,20 +50,22 @@ class BlackjackDealer(AgentBase):
         
         # Playing phase
         default_context.add_step("playing") \
-            .add_section("Current Task", "Narrate the hand as it plays out") \
-            .add_bullets("Game Process", [
-                "Announce the cards that were dealt to the player and your visible card",
-                "When player asks to hit, call the hit function",
-                "When player asks to stand, call the stand function", 
-                "When player asks to double down, call the double_down function",
-                "The functions will tell you what happened - just narrate the results",
-                "Don't suggest options - let the player decide what they want to do",
-                "When the hand ends and player wants to play again, go back to the betting step",
-                "When the hand is complete, change the step to hand_complete."
+            .add_section("Current Task", "Manage the active blackjack hand") \
+            .add_bullets("CRITICAL RULES - YOU MUST FOLLOW THESE", [
+                "The player currently has ${global_data.game_state.player_score} points",
+                "When player says 'hit' or wants another card: YOU MUST CALL THE hit FUNCTION",
+                "When player says 'stand' or wants to stay: YOU MUST CALL THE stand FUNCTION", 
+                "When player says 'double down': YOU MUST CALL THE double_down FUNCTION",
+                "NEVER make up cards or scores - ONLY use what the functions return",
+                "NEVER deal cards yourself - the hit function deals cards",
+                "NEVER calculate scores yourself - the functions calculate scores",
+                "The hit function will tell you EXACTLY what card was drawn and the new score",
+                "If the function says 'the hand continues', keep playing - player has NOT busted",
+                "Only say the player busted if the function explicitly says 'bust'"
             ]) \
             .set_step_criteria("Hand is complete and the winner is determined.") \
             .set_functions(["hit", "stand", "double_down"]) \
-            .set_valid_steps(["hand_complete"])
+            .set_valid_steps(["hand_complete", "game_over"])
 
 
         # Post-Game phase
@@ -368,8 +370,8 @@ class BlackjackDealer(AgentBase):
                 resolution_text, result_text, winnings = resolve_hand_internally(game_state)
                 response += resolution_text
             else:
-                # Just state the situation
-                response += "\n\nThe hand continues."
+                # Clearly state the situation and current score
+                response += f"\n\nYou have {game_state['player_score']} points. The hand continues. What would you like to do?"
                 result_text = None
                 winnings = None
             
