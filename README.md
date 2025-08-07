@@ -356,7 +356,8 @@ This codebase serves as a practical example of:
 - Synchronizing backend state with frontend UI
 - Handling real-time user events and responses
 
-For more information on SignalWire AI Agents:
-- [SignalWire AI Agents Documentation](https://docs.signalwire.com/ai)
-- [SWML Reference](https://docs.signalwire.com/swml)
-- [SignalWire Fabric SDK](https://docs.signalwire.com/fabric)
+For more information on SignalWire technologies:
+- [SignalWire Agents SDK (GitHub)](https://github.com/signalwire/signalwire-agents) - Python SDK for building AI agents
+- [SignalWire AI Documentation](https://developer.signalwire.com/ai/) - AI Agent guides and tutorials
+- [SWML Documentation](https://developer.signalwire.com/swml/) - SignalWire Markup Language reference
+- [Browser SDK Documentation](https://developer.signalwire.com/sdks/browser-sdk/) - JavaScript SDK for WebRTC
