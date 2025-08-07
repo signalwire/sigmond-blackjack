@@ -286,13 +286,6 @@ Each step has:
 
 ## Testing
 
-Use the provided test script to verify game flow:
-
-```bash
-cd bot
-python test_game.py  # Tests betting, hitting, standing, and new hand
-```
-
 For SWAIG function testing:
 ```bash
 swaig-test sigmond_blackjack.py --list-tools
