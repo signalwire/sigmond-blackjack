@@ -47,6 +47,7 @@ pip-delete-this-directory.txt
 # Bot specific
 bot/*.log
 bot/nohup.out
+bot/*.pid
 
 # Testing
 .pytest_cache/
