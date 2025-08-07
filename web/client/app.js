@@ -720,6 +720,15 @@ function handleDisconnect() {
         resultMessage.classList.remove('show');
     }
     
+    // Clean up video element created by SignalWire SDK
+    const videoContainer = document.getElementById('video-container');
+    if (videoContainer) {
+        // Remove all child elements (video/audio elements)
+        while (videoContainer.firstChild) {
+            videoContainer.removeChild(videoContainer.firstChild);
+        }
+    }
+    
     if (roomSession) {
         roomSession = null;
     }
