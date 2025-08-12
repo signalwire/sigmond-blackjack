@@ -1066,6 +1066,19 @@ Example usage:
                 if favicon_path.exists():
                     return FileResponse(str(favicon_path), media_type="image/svg+xml")
                 return {"error": "favicon not found"}
+            
+            # Serve Open Graph image for social media previews
+            @app.get("/og-image.png")
+            @app.get("/og-image.svg")
+            async def serve_og_image():
+                og_image_path = web_dir / "og-image.svg"
+                if og_image_path.exists():
+                    return FileResponse(str(og_image_path), media_type="image/svg+xml",
+                                      headers={
+                                          "Cache-Control": "public, max-age=86400",  # Cache for 1 day
+                                          "Content-Type": "image/svg+xml"
+                                      })
+                return {"error": "og-image not found"}
     
     # Now add the agent's routes (these will require auth)
     router = dealer.as_router()

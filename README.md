@@ -1,21 +1,28 @@
 # SignalWire Blackjack - AI Agent Demo
 
-A fully-functional blackjack game demonstrating how to build sophisticated SignalWire AI Agents that integrate with web applications. This project showcases real-time communication between AI agents and web interfaces using WebRTC video calling and event-driven architecture.
+A fully-functional blackjack game demonstrating how to build sophisticated SignalWire AI Agents with integrated web serving. This project showcases a single-service architecture where the AI agent serves both the SWML API and the web client, with real-time communication via WebRTC video calling and event-driven architecture.
+
+## 🎮 Play Now
+
+Visit [https://blackjack.signalwire.me](https://blackjack.signalwire.me) to play!
 
 ## Overview
 
 This demonstration application illustrates best practices for building SignalWire AI Agents that:
+- Serve both API and web client from a single process
 - Maintain complex stateless game logic
 - Communicate with web frontends via SWML events
 - Manage conversation flow through structured steps
 - Integrate WebRTC video/audio for immersive experiences
 - Handle real-time user interactions and state synchronization
+- Provide public web access while protecting API endpoints
 
 The blackjack game serves as a practical example of these concepts, featuring a professional AI dealer that manages gameplay, maintains state, and provides real-time UI updates through SignalWire's platform.
 
 ## Features
 
 - **AI-Powered Dealer**: Professional dealer using ElevenLabs' Adam voice
+- **Integrated Web Serving**: Single process serves both API and web client
 - **Standard Casino Rules**: Dealer hits on 16, stands on 17
 - **Complete Game Mechanics**:
   - Betting system with starting chips (1000)
@@ -26,7 +33,8 @@ The blackjack game serves as a practical example of these concepts, featuring a 
 - **Video Call Integration**: Face-to-face gaming via SignalWire WebRTC
 - **Stateless Architecture**: Centralized game state management with proper flow control
 - **Step-Based Conversation Flow**: Structured gameplay with betting → playing → hand_complete steps
-- **Mute Controls**: Option to start muted or toggle during play
+- **Social Media Ready**: Open Graph meta tags for rich social sharing
+- **Authentication**: Public web access with protected API endpoints
 - **Event Logging**: Optional debug log for monitoring game events
 
 ## Project Structure
@@ -34,18 +42,23 @@ The blackjack game serves as a practical example of these concepts, featuring a 
 ```
 blackjack/
 ├── bot/                        # Bot implementation
-│   ├── sigmond_blackjack.py   # Main AI dealer agent (refactored)
+│   ├── sigmond_blackjack.py   # AI dealer with integrated web server
 │   └── bot.sh                 # Control script for starting/stopping
 ├── web/                       # Web interface and media files
 │   ├── client/                # Frontend application
-│   │   ├── index.html         # Main UI
+│   │   ├── index.html         # Main UI with Open Graph meta tags
 │   │   ├── app.js             # JavaScript game logic
-│   │   └── signalwire.js      # SignalWire SDK
+│   │   ├── signalwire.js      # SignalWire SDK
+│   │   └── favicon.svg        # Blackjack-themed favicon
 │   ├── card_images/           # Playing card images
+│   ├── og-image.svg           # Social media preview image
 │   ├── sigmond_bj_idle.mp4    # Dealer idle video
 │   ├── sigmond_bj_talking.mp4 # Dealer talking video
 │   └── casino.mp3             # Background music
-└── README.md                  # This file
+├── Procfile                   # Heroku/Dokku deployment config
+├── requirements.txt           # Python dependencies
+├── runtime.txt                # Python version specification
+└── CLAUDE.md                  # Developer documentation
 ```
 
 
@@ -53,12 +66,11 @@ blackjack/
 
 ### Environment Variables
 
-**Required**:
-- `BLACKJACK_WEB_ROOT`: URL where blackjack media files are hosted (e.g., `https://your-domain.com/path/to/blackjack`)
-
-**Optional** (for authentication):
-- `SWML_DEV_USERNAME`: Basic auth username (defaults to auto-generated)
-- `SWML_DEV_PASSWORD`: Basic auth password (defaults to auto-generated)
+**Optional**:
+- `BLACKJACK_WEB_ROOT`: URL where media files are hosted (defaults to `http://localhost:PORT`)
+- `PORT`: Port to run the service on (default: 5000)
+- `SWML_DEV_USERNAME`: Basic auth username for API (auto-generated if not set)
+- `SWML_DEV_PASSWORD`: Basic auth password for API (auto-generated if not set)
 
 ### Running with HTTPS
 
@@ -81,66 +93,77 @@ The SignalWire Agents SDK provides comprehensive security features including:
 
 For complete security configuration options, see the [SignalWire Agents Security Documentation](https://github.com/signalwire/signalwire-agents/blob/main/docs/security.md).
 
-### Bot Setup
+### Quick Start
 
-1. Navigate to the bot directory:
+1. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. Run the integrated server:
    ```bash
    cd bot
+   python sigmond_blackjack.py  # Runs on port 5000 by default
    ```
 
-2. Install SignalWire Agents SDK:
-   ```bash
-   pip install signalwire-agents
-   ```
+3. Access the application:
+   - Web client: `http://localhost:5000/`
+   - API endpoint: `http://localhost:5000/blackjack` (requires auth)
 
-3. Set required environment variable:
-   ```bash
-   export BLACKJACK_WEB_ROOT="https://your-domain.com/path/to/blackjack"
-   ```
+### Using the Control Script
 
-4. Run the Dealer using the control script:
-   ```bash
-   ./bot.sh start    # Start the dealer on port 3010
-   ./bot.sh restart  # Restart the dealer
-   ./bot.sh status   # Check if dealer is running
-   ./bot.sh logs     # View logs
-   ./bot.sh stop     # Stop the dealer
-   ```
+```bash
+cd bot
+./bot.sh start    # Start the dealer on port 5000
+./bot.sh restart  # Restart the dealer
+./bot.sh status   # Check if dealer is running
+./bot.sh logs     # View logs
+./bot.sh stop     # Stop the dealer
+```
 
-   Or run directly:
-   ```bash
-   # HTTP mode (default)
-   python sigmond_blackjack.py --port 3010
-   
-   # HTTPS mode
-   export SWML_SSL_ENABLED=true
-   export SWML_SSL_CERT_PATH=/path/to/cert.pem
-   export SWML_SSL_KEY_PATH=/path/to/key.pem
-   export SWML_DOMAIN=yourdomain.com
-   python sigmond_blackjack.py --port 3010
-   ```
+### Custom Port
 
-### Web Interface Setup
+```bash
+python sigmond_blackjack.py --port 8080
+```
+
+### HTTPS Mode
+
+```bash
+export SWML_SSL_ENABLED=true
+export SWML_SSL_CERT_PATH=/path/to/cert.pem
+export SWML_SSL_KEY_PATH=/path/to/key.pem
+export SWML_DOMAIN=yourdomain.com
+python sigmond_blackjack.py
+```
+
+### Deployment
+
+#### Heroku/Dokku
+
+The application is configured for easy deployment to Heroku or Dokku:
+
+```bash
+# For Heroku
+git push heroku main
+
+# For Dokku
+git push dokku main
+```
+
+The Procfile automatically configures the service to run on the platform's assigned PORT.
+
+#### Configuration for Production
 
 1. Update the SignalWire token in `web/client/app.js`:
    ```javascript
    const STATIC_TOKEN = 'your-signalwire-token-here';
    ```
 
-2. The card images use relative paths from the client directory (already configured)
-
-3. The destination uses SignalWire routing:
+2. Update the destination for your SignalWire routing:
    ```javascript
-   const DESTINATION = '/public/tony-s-swml-generator';
+   const DESTINATION = '/public/your-agent-name';
    ```
-
-4. Serve the web directory using any web server:
-   ```bash
-   cd web
-   python -m http.server 8080
-   ```
-
-5. Access the application at `http://localhost:8080/client/`
 
 ## How to Play
 
@@ -208,6 +231,35 @@ The game uses a structured step-based conversation flow:
 - **SignalWire Token**: Update `STATIC_TOKEN` in app.js
 - **Destination**: Update `DESTINATION` for SignalWire routing
 - **Card Images**: Uses relative paths (../card_images from client directory)
+
+## Architecture Updates (v2.0)
+
+### Integrated Web Serving
+The application now uses a single-process architecture where the SignalWire agent serves both the API and web client:
+
+- **Single Port**: Everything runs on one port (default 5000)
+- **Public Access**: Web client and static files are publicly accessible
+- **Protected API**: Only `/blackjack` endpoints require authentication
+- **Simplified Deployment**: No need for separate web server process
+
+### Authentication Model
+- **Public Routes** (no auth required):
+  - `/` - Web client interface
+  - `/app.js`, `/signalwire.js` - JavaScript files
+  - `/card_images/*` - Card images
+  - `/favicon.svg` - Favicon
+  - `/og-image.png` - Social media preview
+  - Media files (videos, audio)
+
+- **Protected Routes** (Basic Auth required):
+  - `/blackjack` - SWML endpoint
+  - `/blackjack/swaig` - SWAIG functions
+  - `/blackjack/post_prompt` - Post-prompt webhook
+
+### Social Media Integration
+- Open Graph meta tags for rich previews
+- Custom preview image with game branding
+- Optimized for Facebook, Twitter, LinkedIn, Discord
 
 ## Technical Implementation
 
@@ -286,33 +338,42 @@ Each step has:
 
 ## Testing
 
-For SWAIG function testing:
+### SWAIG Function Testing
 ```bash
+cd bot
 swaig-test sigmond_blackjack.py --list-tools
 swaig-test sigmond_blackjack.py --exec place_bet --amount 50
 ```
 
+### Local Testing
+1. Start the server: `python sigmond_blackjack.py`
+2. Open browser to `http://localhost:5000`
+3. Check API endpoint: `curl -u username:password http://localhost:5000/blackjack`
+
 ## Troubleshooting
 
-1. **Bot Won't Start**:
-   - Ensure `BLACKJACK_WEB_ROOT` environment variable is set
-   - Check port 3010 is available
-   - Verify SignalWire Agents SDK is installed
+1. **Port Already in Use**:
+   - Default port is 5000, use `--port` flag to specify another
+   - Check if another process is using the port: `lsof -i :5000`
 
 2. **Connection Issues**:
-   - Verify SignalWire token is correct
+   - Verify SignalWire token is correct in `app.js`
    - Check bot is running (`./bot.sh status`)
-   - Ensure userVariables includes `extension: 'sigmond_blackjack'`
+   - Ensure the destination matches your agent configuration
 
-3. **Cards Not Displaying**:
-   - Verify `BASE_URL` in app.js points to card images
-   - Check browser console for 404 errors
-   - Ensure all 52 card images plus card_back.png are available
+3. **404 Errors on Static Files**:
+   - Ensure you're running from the `bot` directory
+   - Check that web files exist in `../web/` relative to bot directory
 
-4. **Game Flow Issues**:
-   - AI not returning to betting: Check step transitions are configured
-   - Cards disappearing: Ensure only `new_hand` sends `game_reset`
+4. **SWAIG Functions Not Working**:
+   - Check browser console for 404 errors on `/blackjack/swaig`
+   - Verify Basic Auth credentials are being sent
+   - Check agent logs for authentication errors
+
+5. **Game State Issues**:
+   - Cards not displaying: Check browser console for WebSocket errors
    - State not persisting: Verify `update_global_data` is called
+   - Wrong URLs generated: Check `_build_webhook_url` override is working
 
 ## Development Notes
 
