@@ -665,6 +665,26 @@ class BlackjackDealer(AgentBase):
             "current_chips": 1000  # Start with initial chip count visible
         })
     
+    def get_full_url(self, include_auth: bool = False) -> str:
+        """Override to return the correct URL when mounted at /blackjack"""
+        base_url = super().get_full_url(include_auth)
+        # If we're mounted at /blackjack, make sure the URL reflects that
+        if '/blackjack' not in base_url:
+            # Parse and reconstruct URL with /blackjack prefix
+            from urllib.parse import urlparse, urlunparse
+            parsed = urlparse(base_url)
+            # Add /blackjack to the path
+            new_path = '/blackjack' + (parsed.path if parsed.path != '/' else '')
+            base_url = urlunparse((
+                parsed.scheme,
+                parsed.netloc,
+                new_path,
+                parsed.params,
+                parsed.query,
+                parsed.fragment
+            ))
+        return base_url
+    
     def _play_dealer_hand(self, game_state):
         """Play out the dealer's hand according to casino rules"""
         dealer_cards_str = ", ".join([self._card_name(card) for card in game_state["dealer_hand"]])
@@ -1049,6 +1069,7 @@ Example usage:
     @app.post("/blackjack")
     async def redirect_to_blackjack_slash_post():
         return RedirectResponse(url="/blackjack/", status_code=307)
+    
     
     # Store the app in the dealer instance so it can be used
     dealer._app = app
