@@ -665,17 +665,28 @@ class BlackjackDealer(AgentBase):
             "current_chips": 1000  # Start with initial chip count visible
         })
     
-    def get_full_url(self, include_auth: bool = False) -> str:
-        """Override to return the correct URL when mounted at /blackjack"""
-        base_url = super().get_full_url(include_auth)
-        # If we're mounted at /blackjack, make sure the URL reflects that
-        if '/blackjack' not in base_url:
-            # Parse and reconstruct URL with /blackjack prefix
+    def _build_webhook_url(self, endpoint: str, query_params: dict = None) -> str:
+        """Override to ensure SWAIG URLs include /blackjack prefix"""
+        # Get the base URL from parent
+        url = super()._build_webhook_url(endpoint, query_params)
+        
+        # If the URL doesn't include /blackjack, add it before the endpoint
+        if '/blackjack' not in url:
+            # Parse the URL to modify the path
             from urllib.parse import urlparse, urlunparse
-            parsed = urlparse(base_url)
-            # Add /blackjack to the path
-            new_path = '/blackjack' + (parsed.path if parsed.path != '/' else '')
-            base_url = urlunparse((
+            parsed = urlparse(url)
+            
+            # Find where /swaig starts in the path and insert /blackjack before it
+            if '/swaig' in parsed.path:
+                new_path = parsed.path.replace('/swaig', '/blackjack/swaig')
+            elif '/post_prompt' in parsed.path:
+                new_path = parsed.path.replace('/post_prompt', '/blackjack/post_prompt')
+            else:
+                # Generic case - add /blackjack at the beginning of the path
+                new_path = '/blackjack' + parsed.path
+            
+            # Reconstruct the URL with the modified path
+            url = urlunparse((
                 parsed.scheme,
                 parsed.netloc,
                 new_path,
@@ -683,7 +694,8 @@ class BlackjackDealer(AgentBase):
                 parsed.query,
                 parsed.fragment
             ))
-        return base_url
+        
+        return url
     
     def _play_dealer_hand(self, game_state):
         """Play out the dealer's hand according to casino rules"""
