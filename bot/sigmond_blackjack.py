@@ -1018,16 +1018,36 @@ Example usage:
                 if js_path.exists():
                     return FileResponse(str(js_path), media_type="application/javascript")
                 return {"error": "signalwire.js not found"}
+            
+            # Serve favicon
+            @app.get("/favicon.svg")
+            async def serve_favicon_svg():
+                favicon_path = client_dir / "favicon.svg"
+                if favicon_path.exists():
+                    return FileResponse(str(favicon_path), media_type="image/svg+xml")
+                return {"error": "favicon.svg not found"}
+            
+            @app.get("/favicon.ico")
+            async def serve_favicon_ico():
+                # Serve SVG as fallback for .ico requests
+                favicon_path = client_dir / "favicon.svg"
+                if favicon_path.exists():
+                    return FileResponse(str(favicon_path), media_type="image/svg+xml")
+                return {"error": "favicon not found"}
     
     # Now add the agent's routes (these will require auth)
     router = dealer.as_router()
     app.include_router(router, prefix="/blackjack")
     
-    # Add a redirect from /blackjack to /blackjack/ since the agent expects trailing slash
+    # Add a redirect from /blackjack to /blackjack/ for both GET and POST
     from fastapi.responses import RedirectResponse
     
     @app.get("/blackjack")
-    async def redirect_to_blackjack_slash():
+    async def redirect_to_blackjack_slash_get():
+        return RedirectResponse(url="/blackjack/", status_code=307)
+    
+    @app.post("/blackjack")
+    async def redirect_to_blackjack_slash_post():
         return RedirectResponse(url="/blackjack/", status_code=307)
     
     # Store the app in the dealer instance so it can be used
