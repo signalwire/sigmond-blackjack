@@ -1079,6 +1079,18 @@ Example usage:
                                           "Content-Type": "image/svg+xml"
                                       })
                 return {"error": "og-image not found"}
+            
+            # Serve Open Graph logo (square format)
+            @app.get("/og-logo.png")
+            async def serve_og_logo():
+                og_logo_path = web_dir / "og-logo.png"
+                if og_logo_path.exists():
+                    return FileResponse(str(og_logo_path), media_type="image/png",
+                                      headers={
+                                          "Cache-Control": "public, max-age=86400",  # Cache for 1 day
+                                          "Content-Type": "image/png"
+                                      })
+                return {"error": "og-logo.png not found"}
     
     # Now add the agent's routes (these will require auth)
     router = dealer.as_router()
