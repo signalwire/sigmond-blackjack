@@ -290,6 +290,7 @@ function handleUserEvent(params) {
             });
             
             gameState.dealerScore = eventData.dealer_score;
+            gameState.gamePhase = 'dealer_playing';  // Change phase so score shows
             updateGameDisplay();
             
             if (eventData.dealer_busted) {
