@@ -1,1 +1,1 @@
-web: cd bot && python sigmond_blackjack.py --port ${PORT:-5000}
+web: python bot/sigmond_blackjack.py --port ${PORT:-5000}
