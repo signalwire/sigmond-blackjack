@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PID_FILE="sigmond_blackjack.pid"
 LOG_FILE="sigmond_blackjack.log"
 DEALER_SCRIPT="$SCRIPT_DIR/sigmond_blackjack.py"
-DEFAULT_PORT=3010  # Different port from tarot (3009)
+DEFAULT_PORT=5000  # Default port for blackjack dealer
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -177,6 +177,6 @@ case "$1" in
         echo "  $0 status  # Check status"
         echo "  $0 stop    # Stop Dealer"
         echo ""
-        echo "Default port: $DEFAULT_PORT (different from tarot's 3009)"
+        echo "Default port: $DEFAULT_PORT"
         ;;
 esac

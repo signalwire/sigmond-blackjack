@@ -1,0 +1,41 @@
+{
+  "name": "SignalWire Blackjack Dealer",
+  "description": "AI-powered blackjack dealer with WebRTC video calling",
+  "keywords": ["signalwire", "ai", "blackjack", "webrtc", "game"],
+  "website": "https://github.com/yourusername/sigmond-blackjack",
+  "repository": "https://github.com/yourusername/sigmond-blackjack",
+  "env": {
+    "BLACKJACK_WEB_ROOT": {
+      "description": "The public URL where the blackjack web interface will be accessible (optional, auto-detected for Dokku)",
+      "required": false
+    },
+    "DOKKU_APP_NAME": {
+      "description": "Dokku app name (automatically set by Dokku)",
+      "required": false
+    },
+    "SWML_DEV_USERNAME": {
+      "description": "Basic auth username for the agent API",
+      "generator": "secret"
+    },
+    "SWML_DEV_PASSWORD": {
+      "description": "Basic auth password for the agent API",
+      "generator": "secret"
+    },
+    "SWML_SSL_ENABLED": {
+      "description": "Enable SSL/HTTPS support",
+      "value": "false",
+      "required": false
+    }
+  },
+  "addons": [],
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "scripts": {
+    "dokku": {
+      "predeploy": "echo 'Preparing SignalWire Blackjack Dealer for deployment'"
+    }
+  }
+}

@@ -1,0 +1,1 @@
+web: cd bot && python sigmond_blackjack.py --port ${PORT:-5000}
