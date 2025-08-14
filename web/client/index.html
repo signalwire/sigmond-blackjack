@@ -109,44 +109,69 @@
             margin-bottom: 10px;
             object-fit: contain;
         }
+        
+        /* Hide any video controls or overlays that might appear */
+        #video-container video::-webkit-media-controls {
+            display: none !important;
+        }
+        
+        #video-container video {
+            pointer-events: none;
+        }
+        
+        /* Hide any SignalWire overlays that might appear */
+        #video-container .overlay,
+        #video-container .controls-overlay {
+            display: none !important;
+        }
 
-        .controls {
+        .controls-container {
             position: fixed;
             bottom: 20px;
             right: 20px;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .controls {
             display: flex;
             flex-direction: column;
             gap: 8px;
             padding: 10px;
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 0.8);
             border-radius: 10px;
-            z-index: 100;
             backdrop-filter: blur(8px);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 215, 0, 0.2);
+            border: 1px solid rgba(255, 215, 0, 0.3);
             transition: all 0.3s ease;
         }
 
-        .controls.connected {
-            flex-direction: row;
-            padding: 4px;
-            gap: 4px;
+        /* When connected, make controls minimal */
+        .controls-container.connected {
             bottom: 10px;
             right: 10px;
-            border-radius: 20px;
-            background: rgba(0, 0, 0, 0.6);
         }
 
-        .controls.connected button {
+        .controls-container.connected .controls {
+            flex-direction: row;
+            padding: 3px;
+            gap: 3px;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 215, 0, 0.1);
+        }
+
+        .controls-container.connected button {
             padding: 4px 8px;
-            font-size: 10px;
-            min-width: 35px;
-            border-radius: 15px;
+            font-size: 11px;
+            min-width: 40px;
+            border-radius: 12px;
         }
         
-        /* Hide checkboxes when connected */
-        .controls.connected .checkbox-container {
-            display: none;
+        /* Hide checkboxes and status when connected */
+        .controls-container.connected .checkbox-container,
+        .controls-container.connected #status {
+            display: none !important;
         }
 
         button {
@@ -429,25 +454,31 @@
                 max-height: 40vh;
             }
 
-            .controls {
+            .controls-container {
                 bottom: 10px;
                 right: 10px;
+            }
+
+            .controls {
                 padding: 8px;
-                gap: 8px;
+                gap: 6px;
             }
             
-            .controls.connected {
-                padding: 2px;
-                gap: 2px;
+            .controls-container.connected {
                 bottom: 5px;
                 right: 5px;
-                opacity: 0.8;
             }
             
-            .controls.connected button {
+            .controls-container.connected .controls {
+                padding: 2px;
+                gap: 2px;
+                background: rgba(0, 0, 0, 0.4);
+            }
+            
+            .controls-container.connected button {
                 padding: 3px 6px;
                 font-size: 9px;
-                min-width: 30px;
+                min-width: 28px;
             }
 
             button {
@@ -607,7 +638,7 @@
     </div>
 
     <!-- Controls float on top right -->
-    <div class="controls-container" style="position: fixed; top: 80px; right: 20px; z-index: 1000; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; border: 1px solid #ffd700;">
+    <div class="controls-container">
         <div class="controls">
             <button id="connectBtn">Connect</button>
             <button id="hangupBtn" style="display: none;">Leave</button>

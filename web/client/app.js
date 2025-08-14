@@ -527,9 +527,9 @@ async function connectToCall() {
             muteBtn.style.display = 'inline-block';
             
             // Add connected class to shrink controls on mobile
-            const controls = document.querySelector('.controls');
-            if (controls) {
-                controls.classList.add('connected');
+            const controlsContainer = document.querySelector('.controls-container');
+            if (controlsContainer) {
+                controlsContainer.classList.add('connected');
             }
             
             // Make buttons ultra compact on mobile
@@ -708,9 +708,9 @@ function handleDisconnect() {
     gameActions.style.display = 'none';
     
     // Remove connected class to restore normal size
-    const controls = document.querySelector('.controls');
-    if (controls) {
-        controls.classList.remove('connected');
+    const controlsContainer = document.querySelector('.controls-container');
+    if (controlsContainer) {
+        controlsContainer.classList.remove('connected');
     }
     
     // Restore button text
@@ -788,7 +788,7 @@ function toggleMute() {
             // Update UI based on first track state
             if (audioTracks.length > 0) {
                 isMuted = !audioTracks[0].enabled;
-                if (window.innerWidth <= 768 && document.querySelector('.controls.connected')) {
+                if (window.innerWidth <= 768 && document.querySelector('.controls-container.connected')) {
                     muteBtn.textContent = isMuted ? '🔊' : '🔇';
                 } else {
                     muteBtn.textContent = isMuted ? 'Unmute' : 'Mute';
