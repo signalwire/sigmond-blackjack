@@ -116,7 +116,7 @@
             right: 20px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
             padding: 10px;
             background: rgba(0, 0, 0, 0.75);
             border-radius: 10px;
@@ -124,6 +124,20 @@
             backdrop-filter: blur(8px);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 215, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .controls.connected {
+            padding: 6px;
+            gap: 6px;
+            bottom: 10px;
+            right: 10px;
+        }
+
+        .controls.connected button {
+            padding: 6px 10px;
+            font-size: 12px;
+            min-width: 60px;
         }
 
         button {
@@ -572,8 +586,8 @@
     <!-- Controls float on top right -->
     <div class="controls-container" style="position: fixed; top: 80px; right: 20px; z-index: 1000; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; border: 1px solid #ffd700;">
         <div class="controls">
-            <button id="connectBtn">Connect to Dealer</button>
-            <button id="hangupBtn" style="display: none;">Leave Table</button>
+            <button id="connectBtn">Connect</button>
+            <button id="hangupBtn" style="display: none;">Leave</button>
             <button id="muteBtn" style="display: none;">Mute</button>
                 
                 <div class="checkbox-container">

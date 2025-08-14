@@ -526,6 +526,12 @@ async function connectToCall() {
             hangupBtn.style.display = 'inline-block';
             muteBtn.style.display = 'inline-block';
             
+            // Add connected class to shrink controls on mobile
+            const controls = document.querySelector('.controls');
+            if (controls) {
+                controls.classList.add('connected');
+            }
+            
             // Log audio output device
             const videoElement = document.querySelector('#video-container video');
             if (videoElement && typeof videoElement.setSinkId === 'function') {
@@ -694,6 +700,12 @@ function handleDisconnect() {
     muteBtn.textContent = 'Mute';
     isMuted = false;
     gameActions.style.display = 'none';
+    
+    // Remove connected class to restore normal size
+    const controls = document.querySelector('.controls');
+    if (controls) {
+        controls.classList.remove('connected');
+    }
     
     // Clear the game board
     clearCards(playerCards);
