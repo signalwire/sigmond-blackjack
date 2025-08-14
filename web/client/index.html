@@ -111,12 +111,19 @@
         }
 
         .controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
             display: flex;
-            flex-direction: row;
-            flex-wrap: wrap;
+            flex-direction: column;
             gap: 10px;
             padding: 10px;
-            justify-content: center;
+            background: rgba(0, 0, 0, 0.75);
+            border-radius: 10px;
+            z-index: 100;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 215, 0, 0.2);
         }
 
         button {
@@ -128,9 +135,7 @@
             cursor: pointer;
             transition: all 0.3s;
             text-transform: uppercase;
-            flex: 1;
-            min-width: 100px;
-            max-width: 200px;
+            min-width: 120px;
         }
 
         #connectBtn {
@@ -402,12 +407,16 @@
             }
 
             .controls {
-                flex-direction: column;
+                bottom: 10px;
+                right: 10px;
+                padding: 8px;
+                gap: 8px;
             }
 
             button {
-                width: 100%;
-                max-width: none;
+                min-width: 100px;
+                padding: 8px 12px;
+                font-size: 14px;
             }
 
             .action-buttons {
