@@ -44,36 +44,37 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
         }
 
         .header {
             background: rgba(0, 0, 0, 0.5);
-            padding: 1rem;
+            padding: 0.75rem;
             text-align: center;
             border-bottom: 2px solid #ffd700;
         }
 
         h1 {
             color: #ffd700;
-            font-size: 2.5rem;
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         .subtitle {
             color: #a0a0a0;
-            font-size: 1rem;
-            margin-top: 0.5rem;
+            font-size: clamp(0.8rem, 2vw, 1rem);
+            margin-top: 0.25rem;
         }
 
         .main-container {
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding: 20px;
+            padding: 10px;
             max-width: 1400px;
             margin: 0 auto;
             width: 100%;
-            height: calc(100vh - 100px);
+            min-height: 0;
         }
 
         #video-container {
@@ -82,45 +83,54 @@
             justify-content: center;
             align-items: center;
             background: rgba(0, 0, 0, 0.3);
-            border-radius: 20px;
-            margin-bottom: 20px;
-            min-height: 400px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            min-height: 200px;
+            max-height: 50vh;
         }
 
         .game-area {
             background: radial-gradient(ellipse at center, #2a5c3f 0%, #1a3c2f 100%);
-            border-radius: 20px;
-            padding: 20px;
+            border-radius: 15px;
+            padding: 15px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-            border: 3px solid #8b4513;
+            border: 2px solid #8b4513;
             position: relative;
+            overflow: auto;
+            max-height: 50vh;
         }
 
         #localVideo, #remoteVideo {
             width: 100%;
-            height: 180px;
+            height: auto;
+            max-height: 40vh;
             background: #000;
             border-radius: 5px;
             margin-bottom: 10px;
-            object-fit: cover;
+            object-fit: contain;
         }
 
         .controls {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
+            flex-wrap: wrap;
             gap: 10px;
             padding: 10px;
+            justify-content: center;
         }
 
         button {
-            padding: 12px 24px;
-            font-size: 16px;
+            padding: 10px 16px;
+            font-size: clamp(14px, 2vw, 16px);
             font-weight: bold;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s;
             text-transform: uppercase;
+            flex: 1;
+            min-width: 100px;
+            max-width: 200px;
         }
 
         #connectBtn {
@@ -151,47 +161,48 @@
 
         .hands-container {
             display: flex;
-            gap: 40px;
+            flex-direction: column;
+            gap: 15px;
             justify-content: center;
-            align-items: flex-start;
+            align-items: stretch;
         }
 
         .hand-area {
             flex: 1;
-            max-width: 500px;
-            padding: 15px;
+            padding: 10px;
             background: rgba(0, 0, 0, 0.2);
             border-radius: 10px;
             border: 2px solid rgba(255, 255, 255, 0.1);
         }
 
         .hand-label {
-            font-size: 1rem;
+            font-size: clamp(0.9rem, 2vw, 1rem);
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             color: #ffd700;
             text-align: center;
         }
 
         .cards {
             display: flex;
-            gap: 10px;
+            gap: 5px;
             justify-content: center;
+            flex-wrap: wrap;
             min-height: 112px;
             align-items: center;
         }
 
         .card {
-            width: 80px;
-            height: 112px;
-            border-radius: 8px;
+            width: clamp(50px, 12vw, 80px);
+            height: clamp(70px, 16.8vw, 112px);
+            border-radius: 6px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             transition: transform 0.3s;
             animation: dealCard 0.5s ease-out;
         }
 
         .card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-3px);
         }
 
         .card img {
@@ -368,6 +379,131 @@
 
         .result-message.show {
             display: block;
+        }
+
+        /* Mobile-specific styles */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 5px;
+            }
+
+            .header {
+                padding: 0.5rem;
+            }
+
+            .game-area {
+                padding: 10px;
+                border-radius: 10px;
+            }
+
+            #video-container {
+                min-height: 150px;
+                max-height: 40vh;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+                max-width: none;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .action-btn {
+                padding: 12px 20px;
+                font-size: 16px;
+                width: 100%;
+            }
+
+            .cards {
+                gap: 3px;
+                min-height: 80px;
+            }
+
+            .result-message {
+                padding: 20px 30px;
+                width: 90%;
+                max-width: 350px;
+            }
+
+            .result-message h2 {
+                font-size: 1.5rem;
+            }
+
+            .chip-change {
+                font-size: 1.2rem;
+            }
+
+            #status {
+                font-size: 0.95rem;
+                padding: 8px;
+            }
+
+            .event-log {
+                margin-top: 10px;
+            }
+
+            #event-entries {
+                max-height: 150px;
+            }
+
+            .game-info {
+                padding: 8px;
+                gap: 5px;
+            }
+
+            .info-item {
+                min-width: 60px;
+            }
+        }
+
+        /* Landscape mode adjustments */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .main-container {
+                padding: 5px;
+            }
+
+            #video-container {
+                max-height: 30vh;
+                min-height: 100px;
+            }
+
+            .game-area {
+                max-height: 60vh;
+            }
+
+            .hands-container {
+                flex-direction: row;
+                gap: 10px;
+            }
+
+            .cards {
+                min-height: 60px;
+            }
+
+            .card {
+                width: clamp(40px, 8vw, 60px);
+                height: clamp(56px, 11.2vw, 84px);
+            }
+        }
+
+        /* Tablet adjustments */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .hands-container {
+                flex-direction: row;
+            }
+
+            .card {
+                width: 70px;
+                height: 98px;
+            }
         }
     </style>
 </head>
