@@ -127,51 +127,98 @@
 
         .controls-container {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            top: 10px;
+            right: 10px;
             z-index: 1000;
-            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            align-items: center;
         }
 
         .controls {
             display: flex;
-            flex-direction: column;
-            gap: 8px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 10px;
+            flex-direction: row;
+            gap: 6px;
+            align-items: center;
+        }
+        
+        /* Icon-only buttons by default */
+        .controls button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            padding: 0;
+            background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(8px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 215, 0, 0.3);
             transition: all 0.3s ease;
         }
-
-        /* When connected, make controls minimal */
-        .controls-container.connected {
-            bottom: 10px;
-            right: 10px;
-        }
-
-        .controls-container.connected .controls {
-            flex-direction: row;
-            padding: 3px;
-            gap: 3px;
-            border-radius: 20px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 215, 0, 0.1);
-        }
-
-        .controls-container.connected button {
-            padding: 4px 8px;
-            font-size: 11px;
-            min-width: 40px;
-            border-radius: 12px;
+        
+        .controls button:hover {
+            transform: scale(1.1);
+            background: rgba(0, 0, 0, 0.9);
         }
         
-        /* Hide checkboxes and status when connected */
-        .controls-container.connected .checkbox-container,
-        .controls-container.connected #status {
-            display: none !important;
+        /* Connect button - green */
+        #connectBtn {
+            background: rgba(76, 175, 80, 0.8);
+        }
+        
+        /* Leave button - red */
+        #hangupBtn {
+            background: rgba(244, 67, 54, 0.8);
+        }
+        
+        /* Mute button - blue */
+        #muteBtn {
+            background: rgba(33, 150, 243, 0.8);
+        }
+        
+        /* Hide checkboxes and status - they go in a settings menu if needed */
+        .checkbox-container,
+        #status {
+            display: none;
+        }
+        
+        /* Settings button for expanding options */
+        .settings-btn {
+            width: 35px;
+            height: 35px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        /* Expanded settings panel */
+        .settings-panel {
+            position: absolute;
+            top: 45px;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 8px;
+            padding: 10px;
+            display: none;
+            min-width: 200px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .settings-panel.show {
+            display: block;
+        }
+        
+        .settings-panel .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 5px 0;
+            color: #fff;
+            font-size: 14px;
         }
 
         button {
@@ -455,30 +502,30 @@
             }
 
             .controls-container {
-                bottom: 10px;
-                right: 10px;
+                top: 5px;
+                right: 5px;
+                gap: 5px;
             }
 
             .controls {
-                padding: 8px;
-                gap: 6px;
+                gap: 4px;
             }
             
-            .controls-container.connected {
-                bottom: 5px;
-                right: 5px;
+            .controls button {
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
             }
             
-            .controls-container.connected .controls {
-                padding: 2px;
-                gap: 2px;
-                background: rgba(0, 0, 0, 0.4);
+            .settings-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 14px;
             }
             
-            .controls-container.connected button {
-                padding: 3px 6px;
-                font-size: 9px;
-                min-width: 28px;
+            .settings-panel {
+                right: 0;
+                top: 40px;
             }
 
             button {
@@ -640,24 +687,25 @@
     <!-- Controls float on top right -->
     <div class="controls-container">
         <div class="controls">
-            <button id="connectBtn">Connect</button>
-            <button id="hangupBtn" style="display: none;">Leave</button>
-            <button id="muteBtn" style="display: none;">Mute</button>
-                
-                <div class="checkbox-container">
-                    <input type="checkbox" id="startMuted">
-                    <label for="startMuted">Start Muted</label>
-                </div>
-                
-                <div class="checkbox-container">
-                    <input type="checkbox" id="showLog">
-                    <label for="showLog">Show Debug Log</label>
-                </div>
-                
-                <div id="status">Ready to connect</div>
+            <button id="connectBtn" title="Connect">📞</button>
+            <button id="hangupBtn" style="display: none;" title="Leave">❌</button>
+            <button id="muteBtn" style="display: none;" title="Mute">🔇</button>
+        </div>
+        <button class="settings-btn" id="settingsBtn" title="Settings">⚙️</button>
+        <div class="settings-panel" id="settingsPanel">
+            <div class="checkbox-container">
+                <input type="checkbox" id="startMuted">
+                <label for="startMuted">Start Muted</label>
             </div>
+            <div class="checkbox-container">
+                <input type="checkbox" id="showLog">
+                <label for="showLog">Show Debug Log</label>
+            </div>
+            <div id="status" style="margin-top: 10px; font-size: 12px; color: #ffd700;">Ready to connect</div>
+        </div>
+    </div>
 
-            <div class="event-log" id="event-log">
+    <div class="event-log" id="event-log">
                 <div class="event-log-header" id="event-log-header">
                     <span>Event Log</span>
                     <span>▼</span>

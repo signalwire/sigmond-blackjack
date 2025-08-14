@@ -526,17 +526,7 @@ async function connectToCall() {
             hangupBtn.style.display = 'inline-block';
             muteBtn.style.display = 'inline-block';
             
-            // Add connected class to shrink controls on mobile
-            const controlsContainer = document.querySelector('.controls-container');
-            if (controlsContainer) {
-                controlsContainer.classList.add('connected');
-            }
-            
-            // Make buttons ultra compact on mobile
-            if (window.innerWidth <= 768) {
-                hangupBtn.textContent = '✕';
-                muteBtn.textContent = '🔇';
-            }
+            // No need to add connected class anymore - buttons are always icons
             
             // Log audio output device
             const videoElement = document.querySelector('#video-container video');
@@ -707,15 +697,7 @@ function handleDisconnect() {
     isMuted = false;
     gameActions.style.display = 'none';
     
-    // Remove connected class to restore normal size
-    const controlsContainer = document.querySelector('.controls-container');
-    if (controlsContainer) {
-        controlsContainer.classList.remove('connected');
-    }
-    
-    // Restore button text
-    hangupBtn.textContent = 'Leave';
-    muteBtn.textContent = 'Mute';
+    // No need to restore anything - buttons are always icons
     
     // Clear the game board
     clearCards(playerCards);
@@ -788,11 +770,7 @@ function toggleMute() {
             // Update UI based on first track state
             if (audioTracks.length > 0) {
                 isMuted = !audioTracks[0].enabled;
-                if (window.innerWidth <= 768 && document.querySelector('.controls-container.connected')) {
-                    muteBtn.textContent = isMuted ? '🔊' : '🔇';
-                } else {
-                    muteBtn.textContent = isMuted ? 'Unmute' : 'Mute';
-                }
+                muteBtn.textContent = isMuted ? '🔊' : '🔇';
                 logEvent(isMuted ? 'Microphone muted' : 'Microphone unmuted');
             }
         } else {
@@ -831,4 +809,22 @@ eventLogHeader.addEventListener('click', () => {
 window.addEventListener('load', () => {
     logEvent('Page loaded, ready to connect');
     updateGameDisplay();
+    
+    // Settings panel toggle
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsPanel = document.getElementById('settingsPanel');
+    
+    if (settingsBtn && settingsPanel) {
+        settingsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            settingsPanel.classList.toggle('show');
+        });
+        
+        // Close settings when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!settingsPanel.contains(e.target) && e.target !== settingsBtn) {
+                settingsPanel.classList.remove('show');
+            }
+        });
+    }
 });
