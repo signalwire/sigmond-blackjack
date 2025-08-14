@@ -231,6 +231,8 @@
             align-items: center;
             justify-content: center;
             opacity: 0.7;
+            color: #fff;
+            border: none;
         }
         
         .settings-btn:hover {
@@ -591,6 +593,7 @@
                 width: 28px;
                 height: 28px;
                 font-size: 12px;
+                border-radius: 14px;
             }
             
             .settings-panel {
@@ -721,7 +724,7 @@
                 <button id="muteBtn" style="display: none;" title="Mute">🔇 Mute</button>
             </div>
             <div id="status">Ready to play</div>
-            <button class="settings-btn" id="settingsBtn" title="Settings">⚙️</button>
+            <div class="settings-btn" id="settingsBtn" title="Settings">⚙️</div>
             <div class="settings-panel" id="settingsPanel">
                 <div class="checkbox-container">
                     <input type="checkbox" id="startMuted">
