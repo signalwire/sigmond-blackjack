@@ -127,7 +127,7 @@
 
         .controls-container {
             width: 100%;
-            padding: 10px 20px;
+            padding: 10px 60px 10px 20px;
             background: linear-gradient(90deg, 
                 transparent, 
                 rgba(0, 0, 0, 0.6) 20%, 
@@ -232,7 +232,11 @@
             justify-content: center;
             opacity: 0.7;
             color: #fff;
-            border: none;
+            padding: 0;
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
         }
         
         .settings-btn:hover {
@@ -593,7 +597,8 @@
                 width: 28px;
                 height: 28px;
                 font-size: 12px;
-                border-radius: 14px;
+                border-radius: 50%;
+                right: 10px;
             }
             
             .settings-panel {
@@ -724,7 +729,7 @@
                 <button id="muteBtn" style="display: none;" title="Mute">🔇 Mute</button>
             </div>
             <div id="status">Ready to play</div>
-            <div class="settings-btn" id="settingsBtn" title="Settings">⚙️</div>
+            <button class="settings-btn" id="settingsBtn" title="Settings">⚙️</button>
             <div class="settings-panel" id="settingsPanel">
                 <div class="checkbox-container">
                     <input type="checkbox" id="startMuted">

@@ -345,6 +345,12 @@ function handleUserEvent(params) {
 // Connect to call with static token
 async function connectToCall() {
     try {
+        // Disable button and show connecting state
+        connectBtn.disabled = true;
+        connectBtn.textContent = '⏳ Connecting...';
+        connectBtn.style.background = 'linear-gradient(135deg, rgba(128, 128, 128, 0.7), rgba(96, 96, 96, 0.7))';
+        connectBtn.style.borderColor = 'rgba(128, 128, 128, 0.5)';
+        
         eventEntries.innerHTML = '';
         logEvent('Starting new connection...');
         
@@ -677,6 +683,11 @@ async function connectToCall() {
         logEvent('Connection error', { error: error.message });
         statusDiv.textContent = 'Connection failed';
         console.error('Connection error:', error);
+        // Reset connect button
+        connectBtn.disabled = false;
+        connectBtn.textContent = '📞 Connect';
+        connectBtn.style.background = '';
+        connectBtn.style.borderColor = '';
         connectBtn.style.display = 'inline-block';
         hangupBtn.style.display = 'none';
         muteBtn.style.display = 'none';
@@ -690,6 +701,11 @@ function handleDisconnect() {
     }
     
     statusDiv.textContent = 'Disconnected';
+    // Reset connect button
+    connectBtn.disabled = false;
+    connectBtn.textContent = '📞 Connect';
+    connectBtn.style.background = '';
+    connectBtn.style.borderColor = '';
     connectBtn.style.display = 'inline-block';
     hangupBtn.style.display = 'none';
     muteBtn.style.display = 'none';
