@@ -526,7 +526,7 @@ async function connectToCall() {
             hangupBtn.style.display = 'inline-block';
             muteBtn.style.display = 'inline-block';
             
-            // No need to add connected class anymore - buttons are always icons
+            // Update button text to be more compact when connected
             
             // Log audio output device
             const videoElement = document.querySelector('#video-container video');
