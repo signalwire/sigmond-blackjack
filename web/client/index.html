@@ -128,16 +128,25 @@
         }
 
         .controls.connected {
-            padding: 6px;
-            gap: 6px;
+            flex-direction: row;
+            padding: 4px;
+            gap: 4px;
             bottom: 10px;
             right: 10px;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.6);
         }
 
         .controls.connected button {
-            padding: 6px 10px;
-            font-size: 12px;
-            min-width: 60px;
+            padding: 4px 8px;
+            font-size: 10px;
+            min-width: 35px;
+            border-radius: 15px;
+        }
+        
+        /* Hide checkboxes when connected */
+        .controls.connected .checkbox-container {
+            display: none;
         }
 
         button {
@@ -425,6 +434,20 @@
                 right: 10px;
                 padding: 8px;
                 gap: 8px;
+            }
+            
+            .controls.connected {
+                padding: 2px;
+                gap: 2px;
+                bottom: 5px;
+                right: 5px;
+                opacity: 0.8;
+            }
+            
+            .controls.connected button {
+                padding: 3px 6px;
+                font-size: 9px;
+                min-width: 30px;
             }
 
             button {

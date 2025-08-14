@@ -532,6 +532,12 @@ async function connectToCall() {
                 controls.classList.add('connected');
             }
             
+            // Make buttons ultra compact on mobile
+            if (window.innerWidth <= 768) {
+                hangupBtn.textContent = '✕';
+                muteBtn.textContent = '🔇';
+            }
+            
             // Log audio output device
             const videoElement = document.querySelector('#video-container video');
             if (videoElement && typeof videoElement.setSinkId === 'function') {
@@ -707,6 +713,10 @@ function handleDisconnect() {
         controls.classList.remove('connected');
     }
     
+    // Restore button text
+    hangupBtn.textContent = 'Leave';
+    muteBtn.textContent = 'Mute';
+    
     // Clear the game board
     clearCards(playerCards);
     clearCards(dealerCards);
@@ -778,7 +788,11 @@ function toggleMute() {
             // Update UI based on first track state
             if (audioTracks.length > 0) {
                 isMuted = !audioTracks[0].enabled;
-                muteBtn.textContent = isMuted ? 'Unmute' : 'Mute';
+                if (window.innerWidth <= 768 && document.querySelector('.controls.connected')) {
+                    muteBtn.textContent = isMuted ? '🔊' : '🔇';
+                } else {
+                    muteBtn.textContent = isMuted ? 'Unmute' : 'Mute';
+                }
                 logEvent(isMuted ? 'Microphone muted' : 'Microphone unmuted');
             }
         } else {
