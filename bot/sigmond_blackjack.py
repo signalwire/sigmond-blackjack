@@ -188,6 +188,7 @@ class BlackjackDealer(AgentBase):
         # Define game functions
         @self.tool(
             name="place_bet",
+            wait_file="/bet.mp3",
             description="Place a bet to start a new hand",
             parameters={
                 "type": "object",
@@ -334,6 +335,7 @@ class BlackjackDealer(AgentBase):
         
         @self.tool(
             name="hit",
+            wait_file="/hit.mp3",
             description="Player takes another card",
             parameters={
                 "type": "object",
@@ -423,6 +425,7 @@ class BlackjackDealer(AgentBase):
         
         @self.tool(
             name="stand",
+            wait_file="/deal.mp3",
             description="Player stands with current hand",
             parameters={
                 "type": "object",
@@ -487,6 +490,7 @@ class BlackjackDealer(AgentBase):
         
         @self.tool(
             name="double_down",
+            wait_file="/hit.mp3",
             description="Double the bet and take exactly one more card",
             parameters={
                 "type": "object",
@@ -575,6 +579,7 @@ class BlackjackDealer(AgentBase):
         
         @self.tool(
             name="new_hand",
+            wait_file="/shuffling.mp3",
             description="Start a new hand after the current one is complete",
             parameters={
                 "type": "object",
