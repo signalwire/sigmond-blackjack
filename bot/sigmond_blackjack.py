@@ -856,26 +856,10 @@ class BlackjackDealer(AgentBase):
             print("\n🎰 Thanks for playing! The casino is now closed.")
 
 
-def main():
-    """Run the Blackjack Dealer"""
-    import sys
-    
-    # Check if we're being run by swaig-test or as a module
-    is_swaig_test = any('swaig-test' in arg or 'test_swaig' in arg for arg in sys.argv)
-    
-    # If run by swaig-test, return the agent instance for testing
-    if is_swaig_test:
-        return BlackjackDealer()
-    
-    # Normal standalone execution
+if __name__ == "__main__":
+    # Parse command line arguments for port
     parser = argparse.ArgumentParser(
-        description='Blackjack Dealer - SignalWire Casino Game',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Example usage:
-  python3 sigmond_blackjack.py                # Run on default port 5000
-  python3 sigmond_blackjack.py --port 8080    # Run on port 8080
-        """
+        description='Blackjack Dealer - SignalWire Casino Game'
     )
     parser.add_argument(
         '--port', '-p',
@@ -885,7 +869,6 @@ Example usage:
     )
     
     args = parser.parse_args()
-    port = args.port
     
     print("=" * 60)
     print("🎰 Blackjack Dealer - SignalWire Casino")
@@ -898,10 +881,6 @@ Example usage:
     print("Dealer rules: Hits on 16, Stands on 17")
     print()
     
-    # Create and run dealer using the new clean architecture
-    dealer = BlackjackDealer()
-    dealer.serve(port=port)
-
-
-if __name__ == "__main__":
-    main()
+    # Create and serve the agent
+    agent = BlackjackDealer()
+    agent.serve(port=args.port)
