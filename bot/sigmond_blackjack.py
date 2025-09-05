@@ -22,7 +22,9 @@ class BlackjackDealer(AgentBase):
     def __init__(self):
         super().__init__(
             name="Dealer",
-            route="/"  # Agent's internal route (will be mounted at /blackjack)
+            route="/swml",  # SWML endpoint will be at /swml (SignalWire expects this)
+            host="0.0.0.0",
+            port=5000
         )
         
         # Set up dealer personality
@@ -631,21 +633,10 @@ class BlackjackDealer(AgentBase):
             "cards"
         ])
         
-        # Set conversation parameters
-        # Get the web root from environment variable or use local server
-        web_root = os.environ.get("BLACKJACK_WEB_ROOT")
-        if not web_root:
-            # Default to local server when not specified
-            port = int(os.environ.get("PORT", 5000))
-            web_root = f"http://localhost:{port}"
-            print(f"BLACKJACK_WEB_ROOT not set, using local server: {web_root}")
-        
+        # Set conversation parameters (video URLs will be set dynamically in on_swml_request)
         self.set_params({
-            "video_talking_file": f"{web_root}/sigmond_bj_talking.mp4",
-            "video_idle_file": f"{web_root}/sigmond_bj_idle.mp4",
             "vad_config": "75",
-            "end_of_speech_timeout": 300,
-            "background_file": f"{web_root}/casino.mp3"
+            "end_of_speech_timeout": 300
         })
 
 
@@ -665,37 +656,120 @@ class BlackjackDealer(AgentBase):
             "current_chips": 1000  # Start with initial chip count visible
         })
     
-    def _build_webhook_url(self, endpoint: str, query_params: dict = None) -> str:
-        """Override to ensure SWAIG URLs include /blackjack prefix"""
-        # Get the base URL from parent
-        url = super()._build_webhook_url(endpoint, query_params)
+    def on_swml_request(self, request_data=None, callback_path=None, request=None):
+        """Override to dynamically set video and audio URLs based on request origin"""
+        # Get the host from the request object if available
+        host = None
         
-        # If the URL doesn't include /blackjack, add it before the endpoint
-        if '/blackjack' not in url:
-            # Parse the URL to modify the path
-            from urllib.parse import urlparse, urlunparse
-            parsed = urlparse(url)
+        if request:
+            # Try to get host from the Starlette request headers
+            headers = dict(request.headers)
+            host = headers.get('host') or headers.get('x-forwarded-host')
             
-            # Find where /swaig starts in the path and insert /blackjack before it
-            if '/swaig' in parsed.path:
-                new_path = parsed.path.replace('/swaig', '/blackjack/swaig')
-            elif '/post_prompt' in parsed.path:
-                new_path = parsed.path.replace('/post_prompt', '/blackjack/post_prompt')
-            else:
-                # Generic case - add /blackjack at the beginning of the path
-                new_path = '/blackjack' + parsed.path
+            # Check if we're behind a proxy with x-forwarded-proto
+            protocol = headers.get('x-forwarded-proto', 'https')
             
-            # Reconstruct the URL with the modified path
-            url = urlunparse((
-                parsed.scheme,
-                parsed.netloc,
-                new_path,
-                parsed.params,
-                parsed.query,
-                parsed.fragment
-            ))
+            # Override protocol for local development
+            if host and ('localhost' in host or '127.0.0.1' in host):
+                protocol = 'http'
         
-        return url
+        # If we found a host, update the video and audio URLs
+        if host:
+            base_url = f"{protocol}://{host}"
+            # Use set_param to set individual params
+            self.set_param("video_idle_file", f"{base_url}/sigmond_bj_idle.mp4")
+            self.set_param("video_talking_file", f"{base_url}/sigmond_bj_talking.mp4")
+            self.set_param("background_file", f"{base_url}/casino.mp3")
+            print(f"Set media URLs to use host: {base_url}")
+        else:
+            # Fallback to environment variable or localhost
+            web_root = os.environ.get("BLACKJACK_WEB_ROOT")
+            if not web_root:
+                port = int(os.environ.get("PORT", 5000))
+                web_root = f"http://localhost:{port}"
+            
+            self.set_param("video_idle_file", f"{web_root}/sigmond_bj_idle.mp4")
+            self.set_param("video_talking_file", f"{web_root}/sigmond_bj_talking.mp4")
+            self.set_param("background_file", f"{web_root}/casino.mp3")
+            print(f"No host header found, using fallback: {web_root}")
+        
+        # Call parent implementation
+        return super().on_swml_request(request_data, callback_path, request)
+    
+    def get_app(self):
+        """
+        Override get_app to create custom app with all endpoints
+        Following the holy guacamole pattern for cleaner static file serving
+        """
+        if self._app is None:
+            from fastapi import FastAPI, Request, Response
+            from fastapi.middleware.cors import CORSMiddleware
+            from fastapi.responses import JSONResponse
+            from fastapi.staticfiles import StaticFiles
+            
+            # Create the FastAPI app
+            app = FastAPI(
+                title="SignalWire Blackjack",
+                description="AI-powered blackjack dealer with Dealer"
+            )
+            
+            # Add CORS middleware
+            app.add_middleware(
+                CORSMiddleware,
+                allow_origins=["*"],
+                allow_credentials=True,
+                allow_methods=["*"],
+                allow_headers=["*"],
+            )
+            
+            # Set up paths
+            self.bot_dir = Path(__file__).parent
+            self.web_dir = self.bot_dir.parent / "web"
+            
+            # API Routes (before static files so they take precedence)
+            @app.get("/health")
+            async def health_check():
+                return JSONResponse(content={
+                    "status": "healthy",
+                    "agent": self.get_name()
+                })
+            
+            @app.get("/api/info")
+            async def get_info():
+                """Provide system information"""
+                return JSONResponse(content={
+                    "agent": self.get_name(),
+                    "version": "1.0.0",
+                    "starting_chips": 1000,
+                    "minimum_bet": 10,
+                    "endpoints": {
+                        "ui": "/",
+                        "swml": "/swml",
+                        "swaig": "/swml/swaig",
+                        "health": "/health"
+                    }
+                })
+            
+            # Create router for SWML endpoints (with auth)
+            router = self.as_router()
+            
+            # Mount the SWML router at /swml (SignalWire expects this)
+            app.include_router(router, prefix=self.route)
+            
+            # Add explicit handler for /swml (without trailing slash) since SignalWire posts here
+            @app.post("/swml")
+            async def handle_swml(request: Request, response: Response):
+                """Handle POST to /swml - SignalWire's webhook endpoint"""
+                return await self._handle_root_request(request)
+            
+            # Mount static files at root (this handles everything else)
+            # The web directory contains all static files (HTML, JS, CSS, videos, card images, etc.)
+            if self.web_dir.exists():
+                app.mount("/", StaticFiles(directory=str(self.web_dir), html=True), name="static")
+            
+            self._app = app
+        
+        return self._app
     
     def _play_dealer_hand(self, game_state):
         """Play out the dealer's hand according to casino rules"""
@@ -748,184 +822,38 @@ class BlackjackDealer(AgentBase):
         """Get the display name of a card"""
         return f"{card['rank'].capitalize()} of {card['suit'].capitalize()}"
     
-    def _get_content_type(self, file_path: str) -> str:
-        """Get the content type for a file based on its extension"""
-        content_type, _ = mimetypes.guess_type(file_path)
-        if content_type:
-            return content_type
-        # Default types for common web files
-        ext = Path(file_path).suffix.lower()
-        return {
-            '.html': 'text/html',
-            '.js': 'application/javascript',
-            '.css': 'text/css',
-            '.png': 'image/png',
-            '.jpg': 'image/jpeg',
-            '.jpeg': 'image/jpeg',
-            '.gif': 'image/gif',
-            '.svg': 'image/svg+xml',
-            '.mp4': 'video/mp4',
-            '.mp3': 'audio/mpeg',
-            '.json': 'application/json',
-        }.get(ext, 'application/octet-stream')
-    
-    def _serve_static_file(self, file_path: Path) -> Response:
-        """Serve a static file from the web directory"""
-        if not file_path.exists():
-            return Response(
-                content="File not found",
-                status_code=404,
-                media_type="text/plain"
-            )
-        
-        try:
-            # Read file content
-            if file_path.suffix.lower() in ['.png', '.jpg', '.jpeg', '.gif', '.mp4', '.mp3']:
-                # Binary files
-                with open(file_path, 'rb') as f:
-                    content = f.read()
-            else:
-                # Text files
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-            
-            # Get content type
-            content_type = self._get_content_type(str(file_path))
-            
-            return Response(
-                content=content,
-                media_type=content_type
-            )
-        except Exception as e:
-            return Response(
-                content=f"Error reading file: {str(e)}",
-                status_code=500,
-                media_type="text/plain"
-            )
-    
     def _register_routes(self, router):
-        """Override to add custom routes for static files and SWML"""
-        # First register parent routes (this includes SWML at root)
+        """Override route registration to add custom endpoints"""
+        # First, register the parent SWML routes
         super()._register_routes(router)
     
-    async def _handle_root_request(self, request: Request):
-        """Override to serve appropriate content based on path and method"""
-        path = request.url.path.rstrip('/')
-        
-        # For root path
-        if path == '' or path == '/':
-            # POST requests to root should return SWML (for SignalWire calls)
-            if request.method == 'POST':
-                return await super()._handle_root_request(request)
-            # GET requests to root return the web interface
-            else:
-                bot_dir = Path(__file__).parent
-                web_root = bot_dir.parent / 'web'
-                index_file = web_root / 'client' / 'index.html'
-                return self._serve_static_file(index_file)
-        
-        # For all other paths, use parent implementation
-        return await super()._handle_root_request(request)
-    
     def serve(self, host=None, port=None):
-        """Override serve to properly set up custom routing"""
+        """Override serve to use our custom app"""
         import uvicorn
-        from fastapi import FastAPI
-        from fastapi.middleware.cors import CORSMiddleware
         
-        if self._app is None:
-            # Create a new FastAPI app
-            app = FastAPI(redirect_slashes=False)
-            
-            # Add CORS middleware
-            app.add_middleware(
-                CORSMiddleware,
-                allow_origins=["*"],
-                allow_credentials=True,
-                allow_methods=["*"],
-                allow_headers=["*"],
-            )
-            
-            # Add health check endpoints
-            @app.get("/health")
-            @app.post("/health")
-            async def health_check():
-                return {
-                    "status": "healthy",
-                    "agent": self.get_name(),
-                    "route": self.route
-                }
-            
-            # Register our custom catch-all FIRST (before parent routes)
-            @app.get("/{full_path:path}")
-            @app.post("/{full_path:path}")
-            async def handle_all_custom_routes(request: Request, full_path: str):
-                """Custom route handler for everything"""
-                
-                # Check authentication first
-                if not self._check_basic_auth(request):
-                    return Response(
-                        content='{"error": "Unauthorized"}',
-                        status_code=401,
-                        headers={"WWW-Authenticate": "Basic"},
-                        media_type="application/json"
-                    )
-                
-                # Handle root
-                if full_path == '' or full_path == '/':
-                    if request.method == 'POST':
-                        return await super(BlackjackDealer, self)._handle_root_request(request)
-                    else:
-                        bot_dir = Path(__file__).parent
-                        web_root = bot_dir.parent / 'web'
-                        index_file = web_root / 'client' / 'index.html'
-                        return self._serve_static_file(index_file)
-                
-                # Handle /blackjack endpoint - return SWML
-                if full_path == 'blackjack' or full_path == 'blackjack/':
-                    return await super(BlackjackDealer, self)._handle_root_request(request)
-                
-                # Handle known SWML endpoints
-                clean_path = full_path.rstrip("/")
-                if clean_path == "debug":
-                    return await self._handle_debug_request(request)
-                elif clean_path == "swaig":
-                    return await self._handle_swaig_request(request, Response())
-                elif clean_path == "post_prompt":
-                    return await self._handle_post_prompt_request(request)
-                elif clean_path == "check_for_input":
-                    return await self._handle_check_for_input_request(request)
-                
-                # Try to serve static files
-                bot_dir = Path(__file__).parent
-                web_root = bot_dir.parent / 'web'
-                
-                # Try web/client first
-                client_file = web_root / 'client' / full_path
-                if client_file.exists() and client_file.is_file():
-                    return self._serve_static_file(client_file)
-                
-                # Try web root
-                web_file = web_root / full_path
-                if web_file.exists() and web_file.is_file():
-                    return self._serve_static_file(web_file)
-                
-                # File not found
-                return {"error": "File not found"}
-            
-            self._app = app
+        host = host or self.host or "0.0.0.0"
+        port = port or self.port or 5000
         
-        host = host or self.host
-        port = port or self.port
+        # Get our custom app with all endpoints
+        app = self.get_app()
         
-        # Print startup info
-        username, password = self.get_basic_auth_credentials()
-        print(f"Agent '{self.name}' is available at:")
-        print(f"URL: http://localhost:{port}")
-        print(f"Basic Auth: {username}:{password} (source: provided)")
+        # Get auth credentials
+        username, password, _ = self.get_basic_auth_credentials(include_source=True)
         
-        # Run the server
-        uvicorn.run(self._app, host=host, port=port)
+        print(f"\nBlackjack Dealer starting...")
+        print(f"Server: http://{host}:{port}")
+        print(f"Basic Auth for SWML endpoints: {username}:{password}")
+        print("\nEndpoints:")
+        print(f"  Web UI:      http://{host}:{port}/  (no auth required)")
+        print(f"  SWML:        http://{host}:{port}/swml  (auth required)")
+        print(f"  SWAIG:       http://{host}:{port}/swml/swaig  (auth required)")
+        print(f"  Health:      http://{host}:{port}/health")
+        print("\nPress Ctrl+C to stop\n")
+        
+        try:
+            uvicorn.run(app, host=host, port=port)
+        except KeyboardInterrupt:
+            print("\n🎰 Thanks for playing! The casino is now closed.")
 
 
 def main():
@@ -970,159 +898,9 @@ Example usage:
     print("Dealer rules: Hits on 16, Stands on 17")
     print()
     
-    # Create and run dealer
+    # Create and run dealer using the new clean architecture
     dealer = BlackjackDealer()
-    
-    # Get auth credentials
-    username, password = dealer.get_basic_auth_credentials()
-    
-    # Create our own FastAPI app for better control over routing
-    from fastapi import FastAPI
-    from fastapi.middleware.cors import CORSMiddleware
-    
-    app = FastAPI(redirect_slashes=False)
-    
-    # Add CORS middleware
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-    
-    # Set up static file serving for the web client FIRST (before agent routes)
-    web_dir = Path(__file__).parent.parent / "web"
-    client_dir = web_dir / "client"
-    
-    # Add static file routes WITHOUT authentication
-    if True:
-        from fastapi.staticfiles import StaticFiles
-        from fastapi.responses import FileResponse, HTMLResponse
-        
-        # Mount the web directories
-        if web_dir.exists():
-            # Mount card images at /card_images
-            card_images_dir = web_dir / "card_images"
-            if card_images_dir.exists():
-                app.mount("/card_images", StaticFiles(directory=str(card_images_dir)), name="card_images")
-            
-            # Add individual routes for media files (no auth required)
-            @app.get("/sigmond_bj_idle.mp4")
-            async def get_idle_video():
-                video_path = web_dir / "sigmond_bj_idle.mp4"
-                if video_path.exists():
-                    return FileResponse(str(video_path), media_type="video/mp4")
-                return {"error": "File not found"}
-            
-            @app.get("/sigmond_bj_talking.mp4")
-            async def get_talking_video():
-                video_path = web_dir / "sigmond_bj_talking.mp4"
-                if video_path.exists():
-                    return FileResponse(str(video_path), media_type="video/mp4")
-                return {"error": "File not found"}
-            
-            @app.get("/casino.mp3")
-            async def get_casino_audio():
-                audio_path = web_dir / "casino.mp3"
-                if audio_path.exists():
-                    return FileResponse(str(audio_path), media_type="audio/mpeg")
-                return {"error": "File not found"}
-            
-            # Serve client files at root (no auth required)
-            @app.get("/")
-            async def serve_index():
-                index_path = client_dir / "index.html"
-                if index_path.exists():
-                    return FileResponse(str(index_path), media_type="text/html")
-                return {"error": "Client not found"}
-            
-            @app.get("/app.js")
-            async def serve_app_js():
-                js_path = client_dir / "app.js"
-                if js_path.exists():
-                    return FileResponse(str(js_path), media_type="application/javascript")
-                return {"error": "app.js not found"}
-            
-            @app.get("/signalwire.js")
-            async def serve_signalwire_js():
-                js_path = client_dir / "signalwire.js"
-                if js_path.exists():
-                    return FileResponse(str(js_path), media_type="application/javascript")
-                return {"error": "signalwire.js not found"}
-            
-            # Serve favicon
-            @app.get("/favicon.svg")
-            async def serve_favicon_svg():
-                favicon_path = client_dir / "favicon.svg"
-                if favicon_path.exists():
-                    return FileResponse(str(favicon_path), media_type="image/svg+xml")
-                return {"error": "favicon.svg not found"}
-            
-            @app.get("/favicon.ico")
-            async def serve_favicon_ico():
-                # Serve SVG as fallback for .ico requests
-                favicon_path = client_dir / "favicon.svg"
-                if favicon_path.exists():
-                    return FileResponse(str(favicon_path), media_type="image/svg+xml")
-                return {"error": "favicon not found"}
-            
-            # Serve Open Graph image for social media previews
-            @app.get("/og-image.png")
-            async def serve_og_image():
-                og_image_path = web_dir / "og-image.png"
-                if og_image_path.exists():
-                    return FileResponse(str(og_image_path), media_type="image/png",
-                                      headers={
-                                          "Cache-Control": "public, max-age=86400",  # Cache for 1 day
-                                          "Content-Type": "image/png"
-                                      })
-                return {"error": "og-image.png not found"}
-            
-            # Serve Open Graph logo (square format)
-            @app.get("/og-logo.png")
-            async def serve_og_logo():
-                og_logo_path = web_dir / "og-logo.png"
-                if og_logo_path.exists():
-                    return FileResponse(str(og_logo_path), media_type="image/png",
-                                      headers={
-                                          "Cache-Control": "public, max-age=86400",  # Cache for 1 day
-                                          "Content-Type": "image/png"
-                                      })
-                return {"error": "og-logo.png not found"}
-    
-    # Now add the agent's routes (these will require auth)
-    router = dealer.as_router()
-    app.include_router(router, prefix="/blackjack")
-    
-    # Add a redirect from /blackjack to /blackjack/ for both GET and POST
-    from fastapi.responses import RedirectResponse
-    
-    @app.get("/blackjack")
-    async def redirect_to_blackjack_slash_get():
-        return RedirectResponse(url="/blackjack/", status_code=307)
-    
-    @app.post("/blackjack")
-    async def redirect_to_blackjack_slash_post():
-        return RedirectResponse(url="/blackjack/", status_code=307)
-    
-    
-    # Store the app in the dealer instance so it can be used
-    dealer._app = app
-    
-    print(f"Web client available at: http://localhost:{port}/")
-    print(f"SWML endpoint available at: http://localhost:{port}/blackjack")
-    print(f"Basic Auth required for /blackjack: {username}:{password}")
-    print()
-    print(f"Starting Dealer on port {port}... Press Ctrl+C to stop.")
-    print("=" * 60)
-    
-    try:
-        # Run using uvicorn directly with our custom app
-        import uvicorn
-        uvicorn.run(app, host="0.0.0.0", port=port)
-    except KeyboardInterrupt:
-        print("\n🎰 Thanks for playing! The casino is now closed.")
+    dealer.serve(port=port)
 
 
 if __name__ == "__main__":

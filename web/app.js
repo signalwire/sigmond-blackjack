@@ -1,8 +1,8 @@
 // Configuration
-const DESTINATION = '/public/sigmond-blackjack';  // Same SignalWire destination as tarot
-// Using the same token from tarot app
-const STATIC_TOKEN = 'eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwidHlwIjoiU0FUIiwiY2giOiJwdWMuc2lnbmFsd2lyZS5jb20ifQ..htbs9CftJWJDV5rN.bq37URPcSrpOBSVRczp8QB5Yb84AkDNH4cr1O_U8kIstLT4uJ7BCPaVpE4_qqqviMt7s2owuRRNO9Tx28uXKo7I8i2Df0s5fZm9WrZkgthSwacq8V-9_mPyUMi1Yiha675aZuL2TFot0NrIaiZEt1IEsdEJFtw1SWBie63vUajwMDrY2GU9wN2BozQ6dT_fHUNbNBCbX4lgLaz2lvT0wZ2gf8S0GTCcr799r75h4GY-masEg2-a8CB937Z7UXh1MQhmTbycUQO9v_PSmeRSYL5acz5SMSoMdUd2M4P4QVK3Csyfvd0xJJQkl9tBEenhlI8ipcGsl_YDzvgS6MkLa3FB2NzY8einjHNZ2xYcelifxbC4yzDxHHmjMPmmSuH20zSg7r6VR8IEtVcr0I9Sp6BhKyxoYcivH9IIVhZwF7d618XJE8lWInszxfXBTn_j0zN8Zomgzo7S6-3Ne-_nhvxnIywsoX3Y4tlUx0yrQIljpEsXb2frqryqiv7v94sxqQSHC4UjeG_EgQ5YoUj9yVIgXvZt8J7_5CTL7Pg2jtsytjJecLOLqYdIWupEtkNdE-fhANQMweoamjcXmboeL50AzTYFq.yKhygR6oYAam-9Pe44RSBw';
-const BASE_URL = '../card_images';  // Relative path from client directory
+const DESTINATION = '/public/black-jack';  // SignalWire destination
+// Updated SignalWire token
+const STATIC_TOKEN = 'eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwidHlwIjoiU0FUIiwiY2giOiJwdWMuc2lnbmFsd2lyZS5jb20ifQ..7FDHr43vIe-6Kkc8.HL_F2WiHCNV2Uo75HVDng0hKDsY2UhVTMn3UOhel9hMovZS57nS35SXDShgWrw3MXFd7bkbCMtW02y9PBlJH9RNJRcJ-XoR3kUsKEmUbgizPhFc8oRhdNvmcToynrEwlmIeBVX5sV7RqgEAQalPh0IqNXsyLu2XdQ80Qk7lWttG3Kg765JyHQOhvfMZGbcrOWOuX0emerYEAQo_FdDhXg4g7ZGSfqpcPXiNF36QyZN7KROWlCH_k-RPcnBC4Nm15kW-HW8IIUWuCPDUoEcf1xnGZeZSvYyM-PQDmv5YIpqaBNUxbIhbCfQITq3L7T89DmJGwFmFl05cdAFmUTZDQX50S_SvbNaJiYe9yCIcB6R9Q0uJwT89PUDsPpvAdm9a-twq9yQV-BF-4Bpm1Ltr7xxtFiwRL8LawP6Rumc8TynxtZck6CW6EFwLBFSEhF2OsD_Glho7M-ZSiqAAgkj5JK2B_HP_nptOvfjNiGPsFgO1Nctf7vx8TnuNQxd_TjrvQtDPn3yl9vkMY8-OtJbTv-ZxY-N7GI4-xofdr2Jhj.24SjuIJJrV0V6CWh5f33NA';
+const BASE_URL = '/card_images';  // Absolute path from web root
 
 let client;
 let roomSession;
@@ -741,10 +741,25 @@ function handleDisconnect() {
         resultMessage.classList.remove('show');
     }
     
-    // Clean up video element created by SignalWire SDK
+    // Clean up video container thoroughly
     const videoContainer = document.getElementById('video-container');
     if (videoContainer) {
-        // Remove all child elements (video/audio elements)
+        logEvent('Cleaning video container');
+        
+        // Stop any video streams in the container
+        const videos = videoContainer.querySelectorAll('video');
+        videos.forEach(video => {
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => {
+                    track.stop();
+                    logEvent(`Stopped ${track.kind} track`);
+                });
+                video.srcObject = null;
+            }
+            video.pause();
+        });
+        
+        // Remove all child elements (ensures clean slate for next connection)
         while (videoContainer.firstChild) {
             videoContainer.removeChild(videoContainer.firstChild);
         }
@@ -797,50 +812,69 @@ function toggleMute() {
     }
 }
 
-// Event listeners
-connectBtn.addEventListener('click', connectToCall);
-hangupBtn.addEventListener('click', hangup);
-muteBtn.addEventListener('click', toggleMute);
+// Event listeners with null checks
+if (connectBtn) connectBtn.addEventListener('click', connectToCall);
+if (hangupBtn) hangupBtn.addEventListener('click', hangup);
+if (muteBtn) muteBtn.addEventListener('click', toggleMute);
 
-showLogCheckbox.addEventListener('change', (e) => {
-    if (e.target.checked) {
-        eventLog.classList.add('active');
-    } else {
-        eventLog.classList.remove('active');
-    }
-});
+if (showLogCheckbox && eventLog) {
+    showLogCheckbox.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            eventLog.classList.add('active');
+        } else {
+            eventLog.classList.remove('active');
+        }
+    });
+}
 
-eventLogHeader.addEventListener('click', () => {
-    const entries = document.getElementById('event-entries');
-    if (entries.style.display === 'none') {
-        entries.style.display = 'block';
-        eventLogHeader.querySelector('span:last-child').textContent = '▼';
-    } else {
-        entries.style.display = 'none';
-        eventLogHeader.querySelector('span:last-child').textContent = '▶';
-    }
-});
+if (eventLogHeader) {
+    eventLogHeader.addEventListener('click', () => {
+        const entries = document.getElementById('event-entries');
+        if (entries) {
+            if (entries.style.display === 'none') {
+                entries.style.display = 'block';
+                const arrow = eventLogHeader.querySelector('span:last-child');
+                if (arrow) arrow.textContent = '▼';
+            } else {
+                entries.style.display = 'none';
+                const arrow = eventLogHeader.querySelector('span:last-child');
+                if (arrow) arrow.textContent = '▶';
+            }
+        }
+    });
+}
 
 // Initialize on page load
 window.addEventListener('load', () => {
     logEvent('Page loaded, ready to connect');
     updateGameDisplay();
     
-    // Settings panel toggle
-    const settingsBtn = document.getElementById('settingsBtn');
-    const settingsPanel = document.getElementById('settingsPanel');
     
-    if (settingsBtn && settingsPanel) {
-        settingsBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            settingsPanel.classList.toggle('show');
-        });
-        
-        // Close settings when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!settingsPanel.contains(e.target) && e.target !== settingsBtn) {
-                settingsPanel.classList.remove('show');
+    // Handle page unload - clean up connections
+    window.addEventListener('beforeunload', () => {
+        if (roomSession) {
+            // Try to hangup gracefully but don't wait
+            try {
+                roomSession.hangup();
+            } catch (e) {
+                // Ignore errors during unload
             }
-        });
-    }
+        }
+        if (client) {
+            try {
+                client.disconnect();
+            } catch (e) {
+                // Ignore errors during unload
+            }
+        }
+    });
+    
+    // Handle page visibility changes (mobile browsers)
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && roomSession) {
+            logEvent('Page hidden - connection may be interrupted');
+        } else if (!document.hidden && roomSession) {
+            logEvent('Page visible again - connection status unknown');
+        }
+    });
 });
