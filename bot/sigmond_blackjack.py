@@ -24,7 +24,8 @@ class BlackjackDealer(AgentBase):
             name="Dealer",
             route="/swml",  # SWML endpoint will be at /swml (SignalWire expects this)
             host="0.0.0.0",
-            port=5000
+            port=5000,
+            record_call=True
         )
         
         # Set up dealer personality
