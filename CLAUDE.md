@@ -9,7 +9,7 @@ This is a SignalWire Blackjack game featuring an AI-powered dealer that integrat
 ## Key Architecture Components
 
 ### Main Components
-- **bot/sigmond_blackjack.py**: Core AI dealer agent using SignalWire Agents SDK - implements stateless blackjack game logic with conversation flow control via steps (betting → playing → hand_complete). Creates a custom FastAPI app that serves static files without authentication first, then mounts the agent's authenticated routes at `/blackjack`. This ensures public access to the web client while protecting the agent API.
+- **bot/sigmond_blackjack.py**: Core AI dealer agent using SignalWire Agents SDK - implements stateless blackjack game logic with conversation flow control via steps (betting → playing → hand_complete). Uses `AgentServer` with `serve_static_files()` to serve static files without authentication, while the agent's authenticated routes are at `/blackjack`.
 - **web_server.py**: Standalone static file server (optional, for separate deployment)
 - **web/client/**: Interactive web interface - handles WebRTC video calls and real-time game UI updates via SWML events
 
@@ -78,15 +78,15 @@ swaig-test sigmond_blackjack.py --exec place_bet --amount 50
 ### Dependencies Installation
 ```bash
 pip install -r requirements.txt
-# Main dependencies: signalwire-agents, fastapi, uvicorn
+# Main dependency: signalwire-agents (includes fastapi, uvicorn)
 ```
 
 ## Environment Variables
 
 **Optional:**
-- `BLACKJACK_WEB_ROOT`: URL where media files are hosted (defaults to `http://localhost:{port}` when not set)
-- `SWML_DEV_USERNAME`: Basic auth username (auto-generated if not set)
-- `SWML_DEV_PASSWORD`: Basic auth password (auto-generated if not set)
+- `SWML_PROXY_URL_BASE`: Base URL when behind reverse proxy (used for media file URLs, defaults to `http://localhost:{port}`)
+- `SWML_BASIC_AUTH_USER`: Basic auth username (auto-generated if not set)
+- `SWML_BASIC_AUTH_PASSWORD`: Basic auth password (auto-generated if not set)
 - `PORT`: Agent port (default: 5000, used by Heroku/Dokku)
 
 **For HTTPS:**
